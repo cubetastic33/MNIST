@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as T
+import matplotlib.pyplot as plt
 
 
 class HAL9000(nn.Module):
@@ -15,20 +16,20 @@ class HAL9000(nn.Module):
         super().__init__()
 
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5)
-        self.bn1 = nn.BatchNorm2d(6)
         self.maxpool1 = nn.MaxPool2d(2, 2)
+        self.bn1 = nn.BatchNorm2d(6)
         self.conv2 = nn.Conv2d(in_channels=6, out_channels=12, kernel_size=3)
-        self.bn2 = nn.BatchNorm2d(12)
         self.maxpool2 = nn.MaxPool2d(2, 2)
+        self.bn2 = nn.BatchNorm2d(12)
         self.fc1 = nn.Linear(300, 150)
         self.fc2 = nn.Linear(150, 10)
         self.dropout = nn.Dropout(.5)
 
     def forward(self, x):
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = self.maxpool1(x)
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = self.maxpool2(x)
+        x = F.relu(self.conv1(x))
+        x = self.bn1(self.maxpool1(x))
+        x = F.relu(self.conv2(x))
+        x = self.bn2(self.maxpool2(x))
         x = F.relu(self.dropout(self.fc1(x.view(-1, 300))))
         x = F.softmax(self.fc2(x), dim=1)
         return x
@@ -45,6 +46,7 @@ train_loader = torch.utils.data.DataLoader(train_set, batch_size=100)
 network = HAL9000().to(DEVICE)
 optimizer = optim.Adam(network.parameters())
 epoch = 0
+losses = []
 
 if os.path.isfile(SAVE_FILE):
     checkpoint = torch.load(SAVE_FILE)
@@ -74,6 +76,7 @@ for i in count(epoch):
         num_correct = predictions.argmax(dim=1).eq(labels.to(DEVICE)).sum().item()
         total_correct += num_correct
         total_loss += loss.item()
+        losses.append(loss.item())
 
     print(
         f"Epoch: {i + 1}",
@@ -90,4 +93,10 @@ for i in count(epoch):
         "optimizer": optimizer.state_dict(),
     }
     torch.save(checkpoint, SAVE_FILE)
+    # Uncomment for loss graph
+    # plt.ion()
+    # plt.title("Loss")
+    # plt.plot(losses)
+    # plt.ioff()
+    # plt.show()
     start_time = time.thread_time()
