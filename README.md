@@ -1,2 +1,2 @@
 # MNIST
-I trained a CNN with pytorch to recognize handwritten digits with the MNIST dataset
+A simple CNN with pytorch for the MNIST dataset
