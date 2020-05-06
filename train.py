@@ -30,7 +30,7 @@ class HAL9000(nn.Module):
         return x
 
 
-DEVICE = torch.device("cpu")
+DEVICE = torch.device("cuda")
 SAVE_FILE = "HAL9000.pt"
 
 train_set = torchvision.datasets.MNIST(
@@ -73,7 +73,7 @@ for i in count(epoch):
 
     print(
         f"Epoch: {i + 1}",
-        "Average accuracy: "
+        "Accuracy: "
         + str(round(total_correct / len(train_set) * 100, 2))
         + "%",
         f"Average loss: {str(round(total_loss / len(train_set), 4))}",
