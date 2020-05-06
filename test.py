@@ -25,7 +25,7 @@ class HAL9000(nn.Module):
         return x
 
 
-DEVICE = torch.device("cpu")
+DEVICE = torch.device("cuda")
 
 test_set = torchvision.datasets.MNIST(
     root="./data", download=True, transform=T.ToTensor(),
@@ -34,23 +34,21 @@ test_set = torchvision.datasets.MNIST(
 test_loader = torch.utils.data.DataLoader(test_set, batch_size=100)
 
 network = HAL9000().to(DEVICE)
-network.load_state_dict(torch.load("HAL9000.pt"))
+network.load_state_dict(torch.load("HAL9000.pt")["network"])
 network.eval()
-all_predictions = torch.tensor([], device=DEVICE)
 num_correct = 0
 total_loss = 0
 
 with torch.no_grad():
     for images, labels in test_loader:
         predictions = network(images.to(DEVICE))
-        all_predictions = torch.cat((all_predictions, predictions), dim=0)
         loss = F.cross_entropy(predictions, labels.to(DEVICE))
-        num_correct = predictions.argmax(dim=1).eq(labels.to(DEVICE)).sum().item()
+        num_correct += predictions.argmax(dim=1).eq(labels.to(DEVICE)).sum().item()
         total_loss += loss.item()
 
 print(
     "Accuracy:",
     str(round(num_correct / len(test_set) * 100, 2)) + "%,",
     "Average loss:",
-    round(total_loss / len(test_set) * 100, 4),
+    round(total_loss / len(test_set), 4),
 )
